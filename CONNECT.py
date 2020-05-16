@@ -22,6 +22,7 @@ class Map(object):
         self.playerx = 0
         self.playery = 0
         self.setup()
+        self.wins = 0
 
     #length Setter/getter
     @property
@@ -58,6 +59,9 @@ class Map(object):
         self.rooms[0][0] = Room(0, self.diff)
         self.roomWorm(0,0)
         self.rooms[0][0].unlocked = True
+
+        #the height of the dungeon
+        self.height = (2 * self.divergence) + 1
         
 
     #Randomly generates dungeon
@@ -86,13 +90,15 @@ class Map(object):
                     self.rooms[x+1][y] = Room(x, self.diff)
                     self.roomWorm(x+1, y)
             
-    #Runs after the player unlocks a room
-    def unlock(x,y):
+    #Runs after the player wins a room, unlocking adjacent rooms
+    def unlock(self, x, y):
+        self.wins += 1
+        self.grid(x,y).win = True 
         neighborsx = [x, x, (x+1), (x-1)]
         neighborsy = [(y-1), (y+1), y, y]
         for i in range(0,4):
-            if not grid(neighborsx,neighborsy).unlocked:
-                grid(neighborsx,neighborsy).unlocked = True
+            if self.grid(neighborsx[i],neighborsy[i]):
+                self.grid(neighborsx[i],neighborsy[i]).unlocked = True
         
         
 
@@ -114,6 +120,7 @@ class Room(object):
         self.diff = diff
         self.AI = None
         self.unlocked = False
+        self.win = False
         self.reward = None
         self.setup()
 

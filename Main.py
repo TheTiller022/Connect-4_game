@@ -14,10 +14,7 @@ import pygame
 #Main Code
 
 #Make the map.
-m = Map(8, 0)
-
-#set the players x and y coords to 0,0
-playerx, playery = 0, 0
+m = Map(8)
 
 
 win = False
@@ -27,9 +24,25 @@ HEIGHT = 600
 gui = GUI(WIDTH, HEIGHT, turn)
 gui.initialize()
 running = True
-
-for i in range(0,8):
-    gui.initialize()
-    gui.game(m.grid(i,0))
-
-
+dev = False
+##Main loop of the game
+complete = False
+while True:
+    x, y = gui.roomSelect(m)
+    print "({},{})".format(x,y)
+    if m.grid(x, y) and m.grid(x, y).unlocked and not m.grid(x, y).win:
+        gui.initialize()
+        sleep(.25)
+        gui.board()
+        if dev or gui.game(m.grid(x,y)):
+            if x == (m.length - 1):
+                m.unlock(x, y)
+                complete = True
+                break
+            m.unlock(x, y)
+        else:
+            break
+print "You won {} games.".format(m.wins)
+if complete:
+    print "Congratulations, you made it to the end of the map!"
+        

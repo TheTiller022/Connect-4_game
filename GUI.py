@@ -25,6 +25,8 @@ class GUI(object):
         del self.taken
         self.taken = {}
         self.turn = "player"
+        self.fontLarge = pygame.font.Font("freesansbold.ttf", 30)
+        self.fontSmall = pygame.font.Font("freesansbold.ttf", 12)
 
     def board(self):
         BoardImg = pygame.image.load("Board.png")
@@ -107,14 +109,109 @@ class GUI(object):
             pass
 
     def win(self):
-        font = pygame.font.Font("freesansbold.ttf", 30)
-        text = font.render("You Win!!!", True, (255,255,255))
+        text = self.fontLarge.render("You Win!!!", True, (255,255,255))
         textRect = text.get_rect()
         textRect.center = (self.WIDTH // 2, self.HEIGHT //2)
         self.window.blit(text, textRect)
+        pygame.display.update()
         
+        
+    def roomGrid(self, m):
+        self.initialize()
+        color = (127, 127, 127)
+        #The gap between rooms
+        gap = 10
+        #The number of rooms in the x and y direction
+        rlength = m.length
+        rheight = m.height
+        #gray background for the map
+        i = pygame.Rect(76, 126, 650, 350)
+        pygame.draw.rect(self.window, color, i)
+        # make sure length and width are functions of how many rooms
+        # also make sure that placement is a function
+        # arbittary stuff
+        width = ((self.WIDTH - 150)/len(m.rooms)) - gap
+        height = ((self.HEIGHT - 250) / m.height) - gap
+        y = 126 + gap / 2
+        for s in range(0, rheight):
+            x = 76 + gap / 2
+            for d in range(0, rlength):
+                #print "{},{}".format(x,y)
+                #picks color based on room's status
+                color = self.roomColor(m, d, s)
+                #draws room
+                i = pygame.Rect(x,y,width,height)
+                pygame.draw.rect(self.window, color, i)
+                #displays room's status over the room
+                self.roomText(m, d, s, (x + (width / 2)), y, height)
+                x += gap + width
+            y += gap + height
+        pygame.display.update()
+
+    def roomSelect(self, m):
+        self.roomGrid(m)
+        pygame.display.update()
+        xi = 76
+        yi = 126
+        gap = 10
+        dx = ((self.WIDTH - 150)/len(m.rooms)) - gap
+        dy = ((self.HEIGHT - 250) / m.height) - gap
+        while True:
+            pressed1, pressed2, presssed3 = pygame.mouse.get_pressed()
+            x,y = pygame.mouse.get_pos()
+            if pressed1:
+                for i in range(0, m.length):
+                    if x >= xi and x <= (xi + dx):
+                        for j in range(0, m.height):
+                            if y >= yi and y <= (yi + dy):
+                                j -= m.divergence
+                                return i, j
+                            yi += (dy + gap)
+                    xi += (dx + gap)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    break
         
 
+    def roomText(self, m, d, s, x, y, height):
+        s -= m.divergence
+        #checks to make sure the room is vaild and unlocked
+        if m.grid(d,s) and m.grid(d,s).unlocked:
+            #Shows the difficulty of the room
+            text = self.fontSmall.render("Difficulty", True, (255,255,255))
+            textRect = text.get_rect()
+            textRect.center = ((x), (y + 12))
+            self.window.blit(text, textRect)
+            text = self.fontSmall.render(str(m.grid(d,s).AI.diff), True, (255,255,255))
+            textRect = text.get_rect()
+            textRect.center = ((x), (y + 24))
+            self.window.blit(text, textRect)
+            #The status of the room
+            if m.grid(d,s).win:
+                status = "Defeated"
+            else:
+                status = "Unlocked"
+            text = self.fontSmall.render(status, True, (255,255,255))
+            textRect = text.get_rect()
+            textRect.center = ((x), (y + height - 12))
+            self.window.blit(text, textRect)
+        
+    def roomColor(self, m, x, y):
+        y -= m.divergence
+        #Default color is gray
+        color = (127, 127, 127)
+        #color = (0, 0, 0)
+        if m.grid(x,y):
+            #if the room is beaten, the color of it is red
+            if m.grid(x,y).win:
+                color = (125, 0, 0)
+            #if the room is unlocked, the color is blue
+            elif m.grid(x,y).unlocked:
+                color = (0, 0, 125)
+        return color
+            
+        
     # where game being run
     def game(self, r):
         while True:
