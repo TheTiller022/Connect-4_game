@@ -11,7 +11,7 @@ from time import sleep
 #####################################################################################        
 #Dungeon map class
 class Map(object):
-    def __init__(self, length = 8, divergence = 1, diff = 1):
+    def __init__(self, length = 8, divergence = 1, diff = 2, lives = 3):
         #How many rooms will spawn between the beginning and the end, horizontally.
         self.length = length
         #How many rooms up or down the paths are alowed to diverge.
@@ -23,6 +23,7 @@ class Map(object):
         self.playery = 0
         self.setup()
         self.wins = 0
+        self.lives = lives
 
     #length Setter/getter
     @property

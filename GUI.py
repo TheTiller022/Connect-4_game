@@ -2,6 +2,7 @@ import pygame
 from math import *
 from time import *
 from collections import defaultdict
+from random import randint
 
 
 class GUI(object):
@@ -15,7 +16,6 @@ class GUI(object):
         self.taken = {}
         
         
-
     def initialize(self):
         pygame.init()
         self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
@@ -27,7 +27,73 @@ class GUI(object):
         self.turn = "player"
         self.fontLarge = pygame.font.Font("freesansbold.ttf", 30)
         self.fontSmall = pygame.font.Font("freesansbold.ttf", 12)
+        self.fontMedium = pygame.font.Font("freesansbold.ttf", 24)
+        
+    def modeSelect(self):
+        self.initialize()
+        #Easy
+        i = pygame.Rect(151, 151, 500, 75)
+        pygame.draw.rect(self.window, (127, 127, 127), i)
+        text = self.fontLarge.render("Easy", True, (0, 125, 0))
+        textRect = text.get_rect()
+        textRect.center = (self.WIDTH // 2, 186)
+        self.window.blit(text, textRect)
+        
+        #Medium
+        i = pygame.Rect(151, 251, 500, 75)
+        pygame.draw.rect(self.window, (127, 127, 127), i)
+        text = self.fontLarge.render("Medium", True, (0, 0, 125))
+        textRect = text.get_rect()
+        textRect.center = (self.WIDTH // 2, 186 + 100)
+        self.window.blit(text, textRect)
+        
+        #Hard
+        i = pygame.Rect(151, 351, 500, 75)
+        pygame.draw.rect(self.window, (127, 127, 127), i)
+        text = self.fontLarge.render("Hard", True, (125, 0, 0))
+        textRect = text.get_rect()
+        textRect.center = (self.WIDTH // 2, 186 + 200)
+        self.window.blit(text, textRect)
+        
+        pygame.display.update()
+        while True:
+            pressed1, pressed2, presssed3 = pygame.mouse.get_pressed()
+            x,y = pygame.mouse.get_pos()
+            if pressed1:
+                if x >= 151 and x <= 651:
+                    if y >= 151 and y <= 226:
+                        return "Easy"
+                    elif y >= 251 and y <= 326:
+                        return "Medium"
+                    elif y >= 351 and y <= 426:
+                        return "Hard"
 
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    break
+            
+    def enemy(self, m, x):
+        #gray border for the enemy
+        i = pygame.Rect(self.WIDTH - 270, 0, 270, 270)
+        pygame.draw.rect(self.window, (127,127,127), i)
+        #black background for the enemy
+        i = pygame.Rect(self.WIDTH - 260, 10, 250, 250)
+        pygame.draw.rect(self.window, (0,0,0), i)
+        pygame.display.update()
+        #choose a random enemy or if it is the final boss, choose boss
+        png = pygame.image.load("enemy/{}.png".format(randint(0,9)))
+        if x == m.length - 1:
+            png = pygame.image.load("enemy/boss.png")
+        self.window.blit(png, (self.WIDTH - 260, 10))
+        pygame.display.update()
+        
+    def playerLives(self, m):
+        text = self.fontMedium.render("Lives:  {}".format(m.lives), True, (255,255,255))
+        textRect = text.get_rect()
+        textRect.center = (75, 24)
+        self.window.blit(text, textRect)
+        pygame.display.update()
+    
     def board(self):
         BoardImg = pygame.image.load("Board.png")
         BoardX = self.WIDTH/5
@@ -108,16 +174,17 @@ class GUI(object):
         elif self.row == False:
             pass
 
-    def win(self):
-        text = self.fontLarge.render("You Win!!!", True, (255,255,255))
+    def phrase(self, pstring, offset = 0):
+        text = self.fontLarge.render(pstring, True, (255,255,255))
         textRect = text.get_rect()
-        textRect.center = (self.WIDTH // 2, self.HEIGHT //2)
+        textRect.center = (self.WIDTH // 2, (self.HEIGHT //2) + offset)
         self.window.blit(text, textRect)
         pygame.display.update()
         
         
     def roomGrid(self, m):
         self.initialize()
+        self.playerLives(m)
         color = (127, 127, 127)
         #The gap between rooms
         gap = 10
@@ -125,8 +192,13 @@ class GUI(object):
         rlength = m.length
         rheight = m.height
         #gray background for the map
-        i = pygame.Rect(76, 126, 650, 350)
+        i = pygame.Rect(76, 76, 650, 400)
         pygame.draw.rect(self.window, color, i)
+        #Title
+        text = self.fontLarge.render("Connect-4 Dungeon Crawler", True, (255,255,255))
+        textRect = text.get_rect()
+        textRect.center = (self.WIDTH // 2, 100)
+        self.window.blit(text, textRect)
         # make sure length and width are functions of how many rooms
         # also make sure that placement is a function
         # arbittary stuff
@@ -160,6 +232,7 @@ class GUI(object):
             pressed1, pressed2, presssed3 = pygame.mouse.get_pressed()
             x,y = pygame.mouse.get_pos()
             if pressed1:
+                sleep(.25)
                 for i in range(0, m.length):
                     if x >= xi and x <= (xi + dx):
                         for j in range(0, m.height):
@@ -168,6 +241,8 @@ class GUI(object):
                                 return i, j
                             yi += (dy + gap)
                     xi += (dx + gap)
+                xi = 76
+                yi = 126
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -223,7 +298,7 @@ class GUI(object):
             x, pos = self.column(x)
             if pressed1:
                 if r.game.play("P", pos):
-                    print r.game
+                    #print r.game
                     self.addPiece()
                     self.board()
                     pygame.display.update()
@@ -231,7 +306,7 @@ class GUI(object):
                         return True
                     sleep(0.25)
                     aix = r.AI.move()
-                    print r.game
+                    #print r.game
                     X = self.WIDTH / 5 + 4
                     self.x = X + (aix)*70
                     self.addPiece()

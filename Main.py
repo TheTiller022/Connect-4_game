@@ -7,14 +7,9 @@ from GUI import *
 from CONNECT import *
 import pygame
         
-    
-
 
 #####################################################################################        
 #Main Code
-
-#Make the map.
-m = Map(8)
 
 
 win = False
@@ -25,24 +20,40 @@ gui = GUI(WIDTH, HEIGHT, turn)
 gui.initialize()
 running = True
 dev = False
-##Main loop of the game
 complete = False
+##Main loop of the game
+#Mode selection
+mode = gui.modeSelect()
+if mode == "Easy":
+    m = Map(5, 0, 1, 5)
+elif mode == "Medium":
+    m = Map()
+elif mode == "Hard":
+    m = Map(12, 2, 3, 1)
+
 while True:
     x, y = gui.roomSelect(m)
-    print "({},{})".format(x,y)
     if m.grid(x, y) and m.grid(x, y).unlocked and not m.grid(x, y).win:
         gui.initialize()
+        gui.playerLives(m)
         sleep(.25)
-        gui.board()
+        gui.enemy(m, x)
+        sleep(2)
         if dev or gui.game(m.grid(x,y)):
             if x == (m.length - 1):
                 m.unlock(x, y)
                 complete = True
                 break
             m.unlock(x, y)
+            gui.phrase("Stage Complete!")
+            sleep(2)
         else:
-            break
-print "You won {} games.".format(m.wins)
+            m.grid(x,y).game.setup()
+            m.lives -= 1
+            sleep(2)
+            if m.lives == 0:
+                break
+gui.phrase("You won {} games.".format(m.wins))
 if complete:
-    print "Congratulations, you made it to the end of the map!"
+    gui.phrase("Congratulations, you've made it to the end of the map!", + 30)
         
